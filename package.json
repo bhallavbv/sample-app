@@ -1,22 +1,24 @@
 {
-  "name": "sample-app",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "engines": {
-    "node":"12.18.2"
-  },
+  "name": "auth-flow",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js",
-    "start-server": "node app.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^1.18.3"
+    "start": "node ./bin/www"
   },
   "dependencies": {
-    "express": "^4.17.1"
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
+    "debug": "~2.6.3",
+    "dotenv": "^5.0.1",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "hbs": "^4.1.1",
+    "helmet": "^4.2.0",
+    "morgan": "^1.10.0",
+    "passport": "^0.4.1",
+    "passport-openidconnect": "0.0.2",
+    "passport-saml": "^1.5.0",
+    "request": "^2.88.2",
+    "serve-favicon": "~2.4.2"
   }
 }
