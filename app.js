@@ -17,8 +17,20 @@ var app = express();
 var cookieSession = require('cookie-session');
 
 var index=require('./routes/index');
-var users=require('./routes/users');
+var users=require('./routes/users');;
+const CryptoJS = require("crypto-js");
 
+const router = express.Router();
+
+    const SAML = require("saml-encoder-decoder-js");
+    const xmlParser = require("xml2json-light");
+    const xml2js = require("xml2js");
+    const util = require("util");
+    
+    const Saml2js = require("saml2js");
+const { response } = require('express');
+
+app.use(cookieParser());
 
 
 passport.serializeUser((user, done) => {
@@ -28,51 +40,55 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user, done) => {
   done(null, user);
 });
-//"https://bia-dev.onelogin.com/trust/saml2/http-post/sso/a801d15c-f46a-447c-b256-106de17782cd",
-//entryPoint: "https://bia-dev.onelogin.com/trust/saml2/http-post/sso/1a62b78f-9251-4b17-b732-a9baef373bd0",
-//https://bia-dev.onelogin.com/trust/saml2/http-post/sso/d1cfb2df-830c-4629-8654-7e804ae481a5
-// SAML strategy for passport -- Single IPD https://bia-dev.onelogin.com/trust/saml2/http-post/sso/
-//https://bia-dev.onelogin.com/trust/saml2/http-post/sso/a801d15c-f46a-447c-b256-106de17782cd
-//MIIDzzCCAregAwIBAgIUWTCE0/DisfVFFRsf3vez83ASnqkwDQYJKoZIhvcNAQEFBQAwQTEMMAoGA1UECgwDQklBMRUwEwYDVQQLDAxPbmVMb2dpbiBJZFAxGjAYBgNVBAMMEU9uZUxvZ2luIEFjY291bnQgMB4XDTIwMTEwMjIwMTcyNFoXDTI1MTEwMjIw MTcyNFowQTEMMAoGA1UECgwDQklBMRUwEwYDVQQLDAxPbmVMb2dpbiBJZFAxGjAY BgNVBAMMEU9uZUxvZ2luIEFjY291bnQgMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A MIIBCgKCAQEA0FxbNkednHlSUxmDE6hjEkIkV9dCqD1PuI/qFzjL8y6C7/NawEooGoc7kL+nsrJmhL0ct4snppKQH/IIrkf0Q8sUhs+4sZZtzMr0+mUydFbDKTDRVPeC9qVhob7T3HpSIUNSL3b83vGpZ5ZgLbYapKzgx85Zy2YwGjDNOoREna7iFfqcjoA8PC9gKyP5frrhitJ57ryOcNWZRuNbLF/lIysA+TU41XL6+1Fs2Zr+CF2oNr7EqRl6O7ZmGOQcVul0t2juipg0QIVgtuWKNSWtiAkTOIXm7PpLVBKWkLSr02lRuiKpNitsezJlYoE0pQwRdP3AC9JPDKGw7mw9YbcxJwIDAQABo4G+MIG7MAwGA1UdEwEB/wQCMAAwHQYDVR0OBBYEFNs41hw7eUXeU9v6GLdjgg0NkqxHMHwGA1UdIwR1MHOAFNs41hw7eUXeU9v6GLdjgg0NkqxHoUWkQzBBMQwwCgYDVQQKDANCSUExFTATBgNVBAsMDE9uZUxvZ2luIElkUDEaMBgGA1UEAwwRT25lTG9naW4gQWNjb3VudCCCFFkwhNPw4rH1RRUbH973s/NwEp6pMA4GA1UdDwEB/wQEAwIHgDANBgkqhkiG9w0BAQUFAAOCAQEAY1ph+5kAHnk24GrJaYGX9X2FMmjjD1jGKFQHG+JpqVp6O7L2RaZPM0Qg8Qla/mqCIwNINEingTE2IUxqOgwQMKCOfp09cW9TUw2kecjQAXg0sf7bPnlgajluIwYEvmby4rF3Se1eEpbZaGfeMETx5dC0UCZ2hkSoJ7ioMPFsl7+EFWND/3Juw1F1V04hR3ZmpzgTpcoT6rI770Lu4i5DQLAP4I/XBPNvJLDLHC9L5AFBVkONr1Z08zSNPLagIR33QTOCu/K7zo+pInp1v8KNEhwz+ucC9lg3tRHlZ0qLF6FH5QD3IbmjD2Q3Pcv2ZqUDU3okEqn+RkITnixddeYqnQ=="
 
 const strategy = new passportSaml.Strategy(
   {
-      //https://login.salesforce.com?so=00D2y000000uBiN
-	entryPoint: "https://bia2.my.salesforce.com/idp/endpoint/HttpRedirect",
+      //https://login.salesforce.com?so=0sp2y0000008OJX
+      //https://bia.my.salesforce.com/idp/login?app=0sp2y0000008OJX
+	entryPoint: "https://bia.my.salesforce.com/idp/login?app=0sp2y0000008OJX",
     issuer: "passport-saml",
-    path:"http://upgrade-project.herokuapp.com/login/callback",
-    cert: "MIIErDCCA5SgAwIBAgIOAXWcUJiBAAAAABDWMyswDQYJKoZIhvcNAQELBQAwgZAxKDAmBgNVBAMMH1NlbGZTaWduZWRDZXJ0XzA2Tm92MjAyMF8wNjQ4NDgxGDAWBgNVBAsMDzAwRDJ5MDAwMDAwdUJpTjEXMBUGA1UECgwOU2FsZXNmb3JjZS5jb20xFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xCzAJBgNVBAgMAkNBMQwwCgYDVQQGEwNVU0EwHhcNMjAxMTA2MDY0ODQ5WhcNMjExMTA2MDAwMDAwWjCBkDEoMCYGA1UEAwwfU2VsZlNpZ25lZENlcnRfMDZOb3YyMDIwXzA2NDg0ODEYMBYGA1UECwwPMDBEMnkwMDAwMDB1QmlOMRcwFQYDVQQKDA5TYWxlc2ZvcmNlLmNvbTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzELMAkGA1UECAwCQ0ExDDAKBgNVBAYTA1VTQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALgsw7ggO36KdPUk/5uv/c5R8QS5XJ3tKRRmk5leoOJSsV6VvSdXEVj3NuF3NLvG4dS9dOpGLJ2dDG+MtxOMeM8D8wTRctE8AAD8dDukRIFp1XAiSjwNqOx8dJMEuaFu2pZRjoyLKBd68zK/o5z3wRcywHJl9kzYBgI3orQbP/u5iKbedv+Ur6C5+eJffMF1z99wis92LXJp3a6jePd6KmMJOia/tz1NxDgif8Q1CFWsMVfl1RMVNUKZlRbSUAchZFAO4C7+GGwPv6fnYvBrx410ZaIRaPJhLZHf/FzEfRkpTIMEEPfVg0d3i4M0hEb8VYBZrxA7d/g4rv7hvjo5XIcCAwEAAaOCAQAwgf0wHQYDVR0OBBYEFH7Baefd6i+vfZaQNOqrnJQx9zvhMA8GA1UdEwEB/wQFMAMBAf8wgcoGA1UdIwSBwjCBv4AUfsFp593qL699lpA06quclDH3O+GhgZakgZMwgZAxKDAmBgNVBAMMH1NlbGZTaWduZWRDZXJ0XzA2Tm92MjAyMF8wNjQ4NDgxGDAWBgNVBAsMDzAwRDJ5MDAwMDAwdUJpTjEXMBUGA1UECgwOU2FsZXNmb3JjZS5jb20xFjAUBgNVBAcMDVNhbiBGcmFuY2lzY28xCzAJBgNVBAgMAkNBMQwwCgYDVQQGEwNVU0GCDgF1nFCYgQAAAAAQ1jMrMA0GCSqGSIb3DQEBCwUAA4IBAQBWeSPqojAFWVnQdTGyfGz3bcXjy65/veVom3BZHTFfCgfr4f8+ayBIMBVXjRqWbg8SPqa6CQFU59lXr2aG+UEcdC9CBQqOEI6m2qnlou9vvxx9MeQjPPBhEAt8hVaTH7GTIGv9A7Axku3MxKomkSbrvUb92sUoR+nlvgDEeYPI684eRPWwCeHMdLs8DqzXbD0eqxY3T+5Y2gLixLQLGRlLR2tedIFMipcydn9SShIVyZYiRRvqdZHIfPDN/IaMKTVgfVbSvT6Jx1uqCXY28YGCHe0Kt1BN+9KRLd/2arKmolyf4VcNG1cLTQXPDC0hXtmQGnPq0ncqHgBQiuXdzCG2"    },
-  (profile, done) => done(null, profile),
+    cert: "MIIEpTCCA42gAwIBAgIOAXT8QaoNAAAAAGl0wNwwDQYJKoZIhvcNAQELBQAwgY4xJjAkBgNVBAMMHVNlbGZTaWduZWRDRVJUX2V4cDIwMjFPY3RvYmVyMRgwFgYDVQQLDA8wMEQxajAwMDAwMDJCUm0xFzAVBgNVBAoMDlNhbGVzZm9yY2UuY29tMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQswCQYDVQQIDAJDQTEMMAoGA1UEBhMDVVNBMB4XDTIwMTAwNjA0NTMxNVoXDTIxMTAwNjAwMDAwMFowgY4xJjAkBgNVBAMMHVNlbGZTaWduZWRDRVJUX2V4cDIwMjFPY3RvYmVyMRgwFgYDVQQLDA8wMEQxajAwMDAwMDJCUm0xFzAVBgNVBAoMDlNhbGVzZm9yY2UuY29tMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQswCQYDVQQIDAJDQTEMMAoGA1UEBhMDVVNBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6L4Qsfp1fGzxQkB0sYjDL8xAHq2nPUUohtW9RM9KZ6neI4ao0XmtNhDVXQ6g+J7za0Q7vSWUlpB2iG41FRHzNa4cEoEPzUYg1HfU2IKRHMUEdFXHaFD1yfa7rf7AUNq4QLSylBtM1IB1SMQXODH7qQMVoQcfETiPb+p4fr8uLAFCW/9r5ZOIQKBxFWayZQeIC1AJhNoQ2WgrmCPW91yIRZ0r84sq0Yg4ExdgwAEFaHiGNTgdYCU7jCLLRupIPLJP//4bHHqLsKtoF/j5KC8Mkk3FTbW7kdpNjjBGvdL6q7XgK91l7IKBw5Wjcw9B0TdjZGO2p+aPFaVcUSdwa27cZQIDAQABo4H+MIH7MB0GA1UdDgQWBBR1Q9uet8FQGKGhE3tWGEf4Pj15PzAPBgNVHRMBAf8EBTADAQH/MIHIBgNVHSMEgcAwgb2AFHVD2563wVAYoaETe1YYR/g+PXk/oYGUpIGRMIGOMSYwJAYDVQQDDB1TZWxmU2lnbmVkQ0VSVF9leHAyMDIxT2N0b2JlcjEYMBYGA1UECwwPMDBEMWowMDAwMDAyQlJtMRcwFQYDVQQKDA5TYWxlc2ZvcmNlLmNvbTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzELMAkGA1UECAwCQ0ExDDAKBgNVBAYTA1VTQYIOAXT8QaoNAAAAAGl0wNwwDQYJKoZIhvcNAQELBQADggEBANvsDKI+nYmensmv1JbC9uoHu1BE7G02berof1jnEbIlVJuSkp5m1Ev9f/itoRAQA4odyhgRbUbixSr7+QNNQSS0e5awtKM29z8MbAj/Nrxh9UVpsJ6Z95wvTx7p4nnFoBUc2SnwvSy2/irE1Xz/MY8fSNczejyn5nDkxA3sV/DzcW9KmXM1Ptli3QnSELZSp6gy7Q8cAaaFM7yXRd1bY9/6ft/4aynF3kWK+LEhmvc4cBzUsyrDlS+gDsZnjQ+wjiSQMY6eYjSPFw9jgjSOtIFJaviEVzgRw+rbCcmSET3al8pE6rA6LfxYFeLoF77o1HK2sO1fDflL/4kRaZRY7OU="
+      
+   },
+  
+ function (profile, done) 
+ {
+     console.log("Profile - "+profile.email);
+      return done(null,
+        {
+          id: profile.uid,
+          email: profile.email,
+          displayName: profile.cn,
+          firstName: profile.givenName,
+          lastName: profile.sn
+        });
+ }
 );
 
 passport.use(strategy);
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
 app.use(logger('dev'));
 app.use(bodyParser.json());
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public'))); 
 
 // Passport requires session to persist the authentication
 // so were using express-session for this example
-app.use(cookieSession({
-  name:'ss',
-  secret: 'secret squirrel',
-  cookie:{
-	  maxAge: 1000*60*60*24*7 // 1 week
-  },
-   
-  resave: true,    //false
-  saveUninitialized: true,
-  cookie:{secure:false}
-}))
+
+
+  app.use(session(
+    {
+      secret: 'secrettexthere',
+      saveUninitialized: true,
+      resave: true
+    }));
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -80,61 +96,67 @@ app.use(passport.session());
 
 // Middleware for checking if a user has been authenticated
 // via Passport and OneLogin OpenId Connect
+
+
+
 function checkAuthentication(req,res,next)
 {
-	//console.log(req);
-	//console.log(JSON.stringify(res));
-    //console.log(JSON.stringify(next));
-  if(req.isAuthenticated())
+ //   res.status(200).redirect(307, 'https://test-wallet.example.com/checkout/?param1=')
+ 
+ 
+
+ 
+ //  res.render('https://boxinallsoftech.com/i',{parameterOne: xxx});
+ 
+
+ 
+ 
+
+   // console.log("Response - "+util.inspect(res, {depth: null}));
+
+    const xmlResponse = req.body.SAMLResponse;
+	if(xmlResponse != null)
+	{	
+    const parser = new Saml2js(xmlResponse);
+    req.samlUserObject = parser.toObject();
+    var ciphertext = CryptoJS.AES.encrypt(req.samlUserObject['username'], 'siddhant').toString();
+    console.log("OUTPUT - "+JSON.stringify(req.samlUserObject));
+    
+    console.log(ciphertext);
+    res.status(200).redirect('http://localhost:4200/ssologin_data/?q='+ciphertext);
+    //res.send(util.inspect(res, {depth: null}));
+ 
+   // res.status(200).redirect(307,'http://localhost:4200/ssologin_data');
+    
+  if(req.samlUserObject.username != null || req.samlUserObject.username != '')
   {
 	  console.log("Authenticated");
+     
       next();
+     
+
   } 
   else
   {	  
-      res.redirect("/");
+    res.redirect("/");
 	  console.log("Not Authenticated");
   }
+	}
+	else
+	{
+       
+		res.redirect("/");
+	 // console.log("Not Authenticated");
+	} 
+
 }
 
 app.use('/', index);
-
 app.use('/users', checkAuthentication, users);
 
-// Initiates an authentication request with OneLogin
-// The user will be redirect to OneLogin and once authenticated
-// they will be returned to the callback handler below
-/*app.get('/login', passport.authenticate('saml', {
-  successReturnToOrRedirect: "/",
-  scope: 'profile'
-}));
 
-// Callback handler that OneLogin will redirect back to
-// after successfully authenticating the user
-app.get('/oauth/callback', passport.authenticate('saml', {
-  callback: true,
-  successReturnToOrRedirect: '/users',
-  failureRedirect: '/'
-}))
-
-// Destroy both the local session and
-// revoke the access_token at OneLogin
-app.get('/logout', function(req, res){
-
-  request.post(`${baseUri}/token/revocation`, {
-    'form':{
-      'client_id': process.env.OIDC_CLIENT_ID,
-      'client_secret': process.env.OIDC_CLIENT_SECRET,
-      'token': req.session.accessToken,
-      'token_type_hint': 'access_token'
-    }
-  },function(err, respose, body){
-
-    console.log('Session Revoked at OneLogin');
-    res.redirect('/');
-
-  });
-}); */
+//res.status(200).redirect(307, 'https://test-wallet.example.com/checkout/?param1=')
+    
 
 const userAgentHandler = (req, res, next) => {
   const agent = useragent.parse(req.headers['user-agent']);
@@ -147,7 +169,8 @@ const userAgentHandler = (req, res, next) => {
 };
 
 
-const router = express.Router();
+
+
 
 /**
  * This Route Authenticates req with IDP
@@ -170,7 +193,8 @@ router.get('/login/sso',
  */
 
   
-  app.get('/login', passport.authenticate('saml', {
+  app.get('/login', passport.authenticate('saml', 
+  {
   successReturnToOrRedirect: "/"
   }));
 
